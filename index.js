@@ -40,6 +40,11 @@ async function run() {
     const usersCollection = client.db("doctors-portal").collection("users");
     const doctorsCollection = client.db("doctors-portal").collection("doctors");
 
+    const verifyAdmin = (req, res, next) => {
+      console.log('req.decoded.email', req.decoded.email);
+      next()
+    }
+
     app.get("/appointmentOptions", async (req, res) => {
       const date = req.query.date;
       const query = {};
@@ -161,24 +166,22 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/doctors', async (req, res) => {
+    app.get('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
       const query = {}
       const doctors = await doctorsCollection.find(query).toArray()
       res.send(doctors)
     })
-    app.post('/doctors', async (req, res) => {
+    app.post('/doctors', verifyJWT, async (req, res) => {
       const doctor = req.body;
       const result = await doctorsCollection.insertOne(doctor)
       res.send(result)
     })
 
-    app.delete('/doctors/:id', async (req, res) => {
+    app.delete('/doctors/:id', verifyJWT, async (req, res) => {
       const { id } = req.params
       const filter = { _id: ObjectId(id) }
       const result = await doctorsCollection.deleteOne(filter)
-      if (result.deletedCount) {
-        res.send(result)
-      }
+      res.send(result)
     })
 
 
